@@ -1,8 +1,10 @@
+require 'rubygems' if RUBY_VERSION < '1.9.0'
 require 'puppet'
 require 'yaml'
-require 'faraday'
 require 'json'
 require 'uri'
+require 'net/https'
+require 'open-uri'
 
 Puppet::Reports.register_report(:slack) do
   desc 'Send notification of puppet run reports to Slack Messaging.'
@@ -26,11 +28,9 @@ Puppet::Reports.register_report(:slack) do
       raise(Puppet::ParseError, msg)
     end
     config = YAML.load_file(configfile)
-    slack_uri = URI.parse(config[:slack_url])
+
 
     # filter
-    #return if self.status == 'unchanged'
-    #return if self.status == 'changed'
     status_icon = case self.status
                         when 'changed' then ':sparkles:'
                         when 'failed' then ':no_entry:'
@@ -42,24 +42,23 @@ Puppet::Reports.register_report(:slack) do
     if config[:slack_puppetboard_url]
       message = "#{status_icon} Puppet run for <#{config[:slack_puppetboard_url]}/node/#{self.host}|#{self.host}> #{self.status} at #{Time.now.asctime}."
     else
-      message = "#{status_icon} Puppet run for #{self.host} #{self.status} at #{Time.now.asctime}."
+      message = "#{status_icon} Puppet run for #{self.host} in #{self.environment} at #{Time.now.asctime}." # #{self.status}
     end
 
-    if self.environment != 'production'
-      message = message + " Environment was #{self.environment}."
-    end
+    # if self.environment != 'production'
+    #   message = message + " Environment was #{self.environment}."
+    # end
 
     Puppet.info "Sending status for #{self.host} to Slack."
 
-    conn = Faraday.new(:url => slack_uri.scheme + '://' + slack_uri.host) do |faraday|
-      faraday.request :url_encoded
-      faraday.adapter Faraday.default_adapter
-    end
-
-    conn.post do |req|
-      req.url slack_uri.path
-      req.body = "payload=" + compose(config, message)
-    end
-
+    uri = URI.parse(config[:slack_url])
+    http = Net::HTTP.new(uri.host, uri.port)
+    # http.set_debug_output($stdout)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    request = Net::HTTP::Post.new(uri.path)
+    request.body = "payload=" + compose(config, message)
+    response = http.request(request)    
+ 
   end
 end
