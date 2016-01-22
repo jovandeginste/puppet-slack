@@ -45,9 +45,17 @@ Puppet::Reports.register_report(:slack) do
       message = "#{status_icon} Puppet run for #{self.host} #{self.status} at #{Time.now.asctime}."
     end
 
-    if self.environment != 'production'
-      message = message + " Environment was #{self.environment}."
-    end
+		important_facts = %w[ environment tier role subrole ]
+		fact_table = [
+			"| Fact | Value |",
+			"| --- | --- |",
+		] + important_facts.map{|key| "| #{key} | #{Facter[key].value} |"}
+
+		message = [
+			message,
+			"",
+			fact_table
+		].flatten.join("\n")
 
     Puppet.info "Sending status for #{self.host} to Slack."
 
