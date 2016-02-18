@@ -45,11 +45,20 @@ Puppet::Reports.register_report(:slack) do
 			message = "#{status_icon} Puppet run for #{self.host} #{self.status} at #{Time.now.asctime}."
 		end
 
-		important_facts = %w[ environment tier role subrole ]
+		facter_facts = %w[ environment tier role subrole ]
+		important_facts = facter_facts.inject({}) { |hash, key|
+			hash[key] = Facter[key].value
+			hash
+		}.merge( {
+			:noop => Puppet.settings[:noop],
+		})
+
+		important_facts_keys = important_facts.keys
+
 		fact_table = [
-			"| " + important_facts.map{|key| key.capitalize}.join(' | ') + ' |',
-			"| " + important_facts.map{|key| '---'}.join(' | ') + ' |',
-			"| " + important_facts.map{|key| Facter[key].value}.join(' | ') + ' |',
+			"| " + important_facts_keys.map{|key| key.capitalize}.join(' | ') + ' |',
+			"| " + important_facts_keys.map{|key| '---'}.join(' | ') + ' |',
+			"| " + important_facts_keys.map{|key| important_facts[key]}.join(' | ') + ' |',
 		]
 
 		message = [
