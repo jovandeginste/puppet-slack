@@ -47,7 +47,11 @@ Puppet::Reports.register_report(:slack) do
 
 		facter_facts = %w[ environment tier role subrole ]
 		important_facts = facter_facts.inject({}) { |hash, key|
-			hash[key] = Facter[key].value
+			hash[key] = if f = Facter[key]
+										f.value
+									else
+										'*unknown*'
+									end
 			hash
 		}.merge( {
 			:runmode => Puppet.settings[:name],
