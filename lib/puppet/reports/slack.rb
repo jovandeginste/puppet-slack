@@ -47,9 +47,10 @@ Puppet::Reports.register_report(:slack) do
 
 		important_facts = %w[ environment tier role subrole ]
 		fact_table = [
-			"| Fact | Value |",
-			"| --- | --- |",
-		] + important_facts.map{|key| "| #{key} | #{Facter[key].value} |"}
+			"| " + important_facts.map{|key| key.capitalize}.join(' | ') + ' |',
+			"| " + important_facts.map{|key| '---'}.join(' | ') + ' |',
+			"| " + important_facts.map{|key| Facter[key].value}.join(' | ') + ' |',
+		]
 
 		message = [
 			message,
