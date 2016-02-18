@@ -45,7 +45,7 @@ Puppet::Reports.register_report(:slack) do
 			message = "#{status_icon} Puppet run for #{self.host} #{self.status} at #{Time.now.asctime}."
 		end
 
-		facter_facts = %w[ environment tier role subrole ]
+		facter_facts = %w[ tier role subrole ]
 		important_facts = facter_facts.inject({}) { |hash, key|
 			hash[key] = if f = Facter[key]
 										f.value
@@ -53,7 +53,8 @@ Puppet::Reports.register_report(:slack) do
 										'*unknown*'
 									end
 			hash
-		}.merge( {
+		}.merge({
+			:environment => self.environment,
 			:runmode => Puppet.settings[:name],
 			:noop => Puppet.settings[:noop],
 		})
