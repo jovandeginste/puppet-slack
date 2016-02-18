@@ -50,6 +50,7 @@ Puppet::Reports.register_report(:slack) do
 			hash[key] = Facter[key].value
 			hash
 		}.merge( {
+			:runmode => Puppet.settings[:name],
 			:noop => Puppet.settings[:noop],
 		})
 
