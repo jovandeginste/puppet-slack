@@ -52,7 +52,7 @@ Puppet::Reports.register_report(:slack) do
 			:noop => Puppet.settings[:noop],
 		}.merge(facter_facts.inject({}) { |hash, key|
 			hash[key] = if f = Facter.value(key)
-										f.value
+										f
 									else
 										'*unknown*'
 									end
