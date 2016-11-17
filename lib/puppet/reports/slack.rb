@@ -44,14 +44,18 @@ Puppet::Reports.register_report(:slack) do
 		else
 			message = "#{status_icon} Puppet run for #{self.host} #{self.status} at #{Time.now.asctime}."
 		end
-
+		query_results =  Puppet::Util::Puppetdb.query_puppetdb("facts { certname = \"#{self.host}\" and (name = \"tier\" or name =\"subrole\" or name = \"role\") }")
+		node_facts = {}
+		query_results.each do | result |
+		  node_facts[result['name']] = result['value']
+		end
 		facter_facts = %w[ tier role subrole ]
 		important_facts = {
 			:environment => self.environment,
 			:runmode => Puppet.settings[:name],
 			:noop => Puppet.settings[:noop],
 		}.merge(facter_facts.inject({}) { |hash, key|
-			hash[key] = if f = Facter.value(key)
+			hash[key] = if f = node_facts.fetch(key)
 										f
 									else
 										'*unknown*'
