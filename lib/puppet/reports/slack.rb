@@ -27,8 +27,6 @@ Puppet::Reports.register_report(:slack) do
 		end
 		config = YAML.load_file(configfile)
 		slack_uri = URI.parse(config[:slack_url])
-		user = ENV['SUDO_USER'] || ENV['USER'] || '(unknown)'
-		File.write('/tmp/env', ENV.to_yaml)
 
 		# filter
 		#return if self.status == 'unchanged'
@@ -44,9 +42,9 @@ Puppet::Reports.register_report(:slack) do
 		if config[:slack_puppetboard_url]
 			pb_url = config[:slack_puppetboard_url].gsub(/:fqdn/, self.host)
 
-			message = "#{status_icon} Puppet run for #{user}@<#{pb_url}|#{self.host}> #{self.status} at #{Time.now.asctime}."
+			message = "#{status_icon} Puppet run for <#{pb_url}|#{self.host}> #{self.status} at #{Time.now.asctime}."
 		else
-			message = "#{status_icon} Puppet run by #{user}@#{self.host} #{self.status} at #{Time.now.asctime}."
+			message = "#{status_icon} Puppet run by #{self.host} #{self.status} at #{Time.now.asctime}."
 		end
 		query_results =  Puppet::Util::Puppetdb.query_puppetdb("facts { certname = \"#{self.host}\" and (name = \"tier\" or name =\"subrole\" or name = \"role\") }")
 		node_facts = {}
