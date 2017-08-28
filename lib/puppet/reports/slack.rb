@@ -50,7 +50,7 @@ Puppet::Reports.register_report(:slack) do
     query_results.each do |result|
       node_facts[result['name']] = result['value']
     end
-    facter_facts = %w[tier role subrole]
+    facter_facts = config.fetch(:facts, %w[tier role subrole])
     important_facts = {
       environment: environment,
       runmode: Puppet.settings[:name],
