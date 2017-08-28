@@ -56,7 +56,7 @@ Puppet::Reports.register_report(:slack) do
       runmode: Puppet.settings[:name],
       noop: Puppet.settings[:noop]
     }.merge(facter_facts.each_with_object({}) do |key, hash|
-      node_fact = node_facts.fetch(key)
+      node_fact = node_facts.fetch(key, nil)
       hash[key] = if node_fact
                     node_fact
                   else
